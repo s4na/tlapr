@@ -1,0 +1,19 @@
+module TemporalSyntax extends Integers {
+  var x, y;
+  def Init = x == 0 && y == 0;
+  def Advance = next(x) == x + 1 && unchanged y;
+  def Idle = unchanged <<x, y>>;
+  def Possible = enabled Advance;
+  def Both = Advance `\cdot` Idle;
+  def Square = stutter(Advance, <<x, y>>);
+  def Angle = nonstutter(Advance, <<x, y>>);
+  def Always = always stutter(Advance, <<x, y>>);
+  def Eventually = eventually (x == 1);
+  def LeadsTo = (x == 0) ~> (x == 1);
+  def Guarantees = (always (x >= 0)) -+-> (always (y >= 0));
+  def Weak = weakFair(<<x, y>>, Advance);
+  def Strong = strongFair(<<x, y>>, Advance);
+  def Hidden = temporalExists z: always (z == x);
+  def Universal = temporalForall z: always (z == z);
+  def Spec = Init && always stutter(Advance, <<x, y>>) && Weak;
+}

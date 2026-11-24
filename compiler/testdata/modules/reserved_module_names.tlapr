@@ -1,0 +1,7 @@
+module `IF` {
+  module `ELSE` {
+    def Value = true;
+  }
+  def Imported = instance `ELSE`;
+  def Value = Imported!Value;
+}

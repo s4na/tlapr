@@ -211,6 +211,10 @@ func FuzzCompile(f *testing.F) {
 	for _, source := range []string{
 		"model X { state { n: Int = 0 } action step { n += 1 } invariant { n >= 0 } }",
 		"model B { state { b: Bool = false } action flip { b = !b } }", "", "model",
+		"module M { def F(n) = let { recursive G(_); def G(x) = if x == 0 then n else G(x-1); } in G(1); }",
+		"module M { var x; def Spec = x == 0 && always stutter(next(x) == x + 1, x); config { specification Spec; } }",
+		"module M { theorem true; proof { step: assume { new x; } prove x == x; obvious; qed omitted; } }",
+		"module M { def R = update(record {a: 1}) {.a = @ + 1;}; }",
 	} {
 		f.Add([]byte(source))
 	}

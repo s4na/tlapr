@@ -1,0 +1,12 @@
+module WeakFairness {
+  var done;
+  def Init = done == false;
+  def Finish = !done && next(done) == true;
+  def Next = Finish || unchanged done;
+  def Spec = Init && always stutter(Next, done) && weakFair(done, Finish);
+  def EventuallyDone = eventually done;
+  config {
+    specification Spec;
+    property EventuallyDone;
+  }
+}

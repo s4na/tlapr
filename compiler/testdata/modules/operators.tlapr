@@ -1,0 +1,499 @@
+// Each nested module isolates aliases of the same TLA+ operator.
+module OperatorVocabulary {
+  module Binary0 {
+    def infix `!!`(left, right) = left;
+    def Direct = 1 `!!` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`!!`);
+  }
+  module Binary1 {
+    def infix `##`(left, right) = left;
+    def Direct = 1 `##` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`##`);
+  }
+  module Binary2 {
+    def infix `$`(left, right) = left;
+    def Direct = 1 `$` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`$`);
+  }
+  module Binary3 {
+    def infix `$$`(left, right) = left;
+    def Direct = 1 `$$` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`$$`);
+  }
+  module Binary4 {
+    def infix `%`(left, right) = left;
+    def Direct = 1 `%` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`%`);
+  }
+  module Binary5 {
+    def infix `%%`(left, right) = left;
+    def Direct = 1 `%%` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`%%`);
+  }
+  module Binary6 {
+    def infix `&`(left, right) = left;
+    def Direct = 1 `&` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`&`);
+  }
+  module Binary7 {
+    def infix `&&`(left, right) = left;
+    def Direct = 1 `&&` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`&&`);
+  }
+  module Binary8 {
+    def infix `(+)`(left, right) = left;
+    def Direct = 1 `(+)` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`(+)`);
+  }
+  module Binary9 {
+    def infix `(-)`(left, right) = left;
+    def Direct = 1 `(-)` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`(-)`);
+  }
+  module Binary10 {
+    def infix `(.)`(left, right) = left;
+    def Direct = 1 `(.)` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`(.)`);
+  }
+  module Binary11 {
+    def infix `(/)`(left, right) = left;
+    def Direct = 1 `(/)` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`(/)`);
+  }
+  module Binary12 {
+    def infix `(\X)`(left, right) = left;
+    def Direct = 1 `(\X)` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`(\X)`);
+  }
+  module Binary13 {
+    def infix `*`(left, right) = left;
+    def Direct = 1 `*` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`*`);
+  }
+  module Binary14 {
+    def infix `**`(left, right) = left;
+    def Direct = 1 `**` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`**`);
+  }
+  module Binary15 {
+    def infix `+`(left, right) = left;
+    def Direct = 1 `+` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`+`);
+  }
+  module Binary16 {
+    def infix `++`(left, right) = left;
+    def Direct = 1 `++` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`++`);
+  }
+  module Binary17 {
+    def infix `-`(left, right) = left;
+    def Direct = 1 `-` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`-`);
+  }
+  module Binary18 {
+    def infix `--`(left, right) = left;
+    def Direct = 1 `--` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`--`);
+  }
+  module Binary19 {
+    def infix `-|`(left, right) = left;
+    def Direct = 1 `-|` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`-|`);
+  }
+  module Binary20 {
+    def infix `..`(left, right) = left;
+    def Direct = 1 `..` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`..`);
+  }
+  module Binary21 {
+    def infix `...`(left, right) = left;
+    def Direct = 1 `...` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`...`);
+  }
+  module Binary22 {
+    def infix `/`(left, right) = left;
+    def Direct = 1 `/` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`/`);
+  }
+  module Binary23 {
+    def infix `//`(left, right) = left;
+    def Direct = 1 `//` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`//`);
+  }
+  module Binary24 {
+    def infix `::=`(left, right) = left;
+    def Direct = 1 `::=` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`::=`);
+  }
+  module Binary25 {
+    def infix `:=`(left, right) = left;
+    def Direct = 1 `:=` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`:=`);
+  }
+  module Binary26 {
+    def infix `:>`(left, right) = left;
+    def Direct = 1 `:>` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`:>`);
+  }
+  module Binary27 {
+    def infix `<`(left, right) = left;
+    def Direct = 1 `<` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`<`);
+  }
+  module Binary28 {
+    def infix `<:`(left, right) = left;
+    def Direct = 1 `<:` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`<:`);
+  }
+  module Binary29 {
+    def infix `=<`(left, right) = left;
+    def Direct = 1 `=<` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`=<`);
+  }
+  module Binary30 {
+    def infix `=|`(left, right) = left;
+    def Direct = 1 `=|` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`=|`);
+  }
+  module Binary31 {
+    def infix `>`(left, right) = left;
+    def Direct = 1 `>` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`>`);
+  }
+  module Binary32 {
+    def infix `>=`(left, right) = left;
+    def Direct = 1 `>=` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`>=`);
+  }
+  module Binary33 {
+    def infix `??`(left, right) = left;
+    def Direct = 1 `??` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`??`);
+  }
+  module Binary34 {
+    def infix `@@`(left, right) = left;
+    def Direct = 1 `@@` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`@@`);
+  }
+  module Binary35 {
+    def infix `^`(left, right) = left;
+    def Direct = 1 `^` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`^`);
+  }
+  module Binary36 {
+    def infix `^^`(left, right) = left;
+    def Direct = 1 `^^` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`^^`);
+  }
+  module Binary37 {
+    def infix `|`(left, right) = left;
+    def Direct = 1 `|` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`|`);
+  }
+  module Binary38 {
+    def infix `|-`(left, right) = left;
+    def Direct = 1 `|-` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`|-`);
+  }
+  module Binary39 {
+    def infix `|=`(left, right) = left;
+    def Direct = 1 `|=` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`|=`);
+  }
+  module Binary40 {
+    def infix `||`(left, right) = left;
+    def Direct = 1 `||` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`||`);
+  }
+  module Binary41 {
+    def infix `<=`(left, right) = left;
+    def Direct = 1 `<=` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`<=`);
+  }
+  module Binary42 {
+    def infix `\approx`(left, right) = left;
+    def Direct = 1 `\approx` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\approx`);
+  }
+  module Binary43 {
+    def infix `\geq`(left, right) = left;
+    def Direct = 1 `\geq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\geq`);
+  }
+  module Binary44 {
+    def infix `\oslash`(left, right) = left;
+    def Direct = 1 `\oslash` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\oslash`);
+  }
+  module Binary45 {
+    def infix `\sqsupseteq`(left, right) = left;
+    def Direct = 1 `\sqsupseteq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\sqsupseteq`);
+  }
+  module Binary46 {
+    def infix `\asymp`(left, right) = left;
+    def Direct = 1 `\asymp` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\asymp`);
+  }
+  module Binary47 {
+    def infix `\gg`(left, right) = left;
+    def Direct = 1 `\gg` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\gg`);
+  }
+  module Binary48 {
+    def infix `\otimes`(left, right) = left;
+    def Direct = 1 `\otimes` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\otimes`);
+  }
+  module Binary49 {
+    def infix `\star`(left, right) = left;
+    def Direct = 1 `\star` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\star`);
+  }
+  module Binary50 {
+    def infix `\bigcirc`(left, right) = left;
+    def Direct = 1 `\bigcirc` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\bigcirc`);
+  }
+  module Binary51 {
+    def infix `\prec`(left, right) = left;
+    def Direct = 1 `\prec` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\prec`);
+  }
+  module Binary52 {
+    def infix `\subset`(left, right) = left;
+    def Direct = 1 `\subset` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\subset`);
+  }
+  module Binary53 {
+    def infix `\bullet`(left, right) = left;
+    def Direct = 1 `\bullet` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\bullet`);
+  }
+  module Binary54 {
+    def infix `\preceq`(left, right) = left;
+    def Direct = 1 `\preceq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\preceq`);
+  }
+  module Binary55 {
+    def infix `\propto`(left, right) = left;
+    def Direct = 1 `\propto` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\propto`);
+  }
+  module Binary56 {
+    def infix `\succ`(left, right) = left;
+    def Direct = 1 `\succ` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\succ`);
+  }
+  module Binary57 {
+    def infix `\leq`(left, right) = left;
+    def Direct = 1 `\leq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\leq`);
+  }
+  module Binary58 {
+    def infix `\sim`(left, right) = left;
+    def Direct = 1 `\sim` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\sim`);
+  }
+  module Binary59 {
+    def infix `\succeq`(left, right) = left;
+    def Direct = 1 `\succeq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\succeq`);
+  }
+  module Binary60 {
+    def infix `\circ`(left, right) = left;
+    def Direct = 1 `\circ` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\circ`);
+  }
+  module Binary61 {
+    def infix `\ll`(left, right) = left;
+    def Direct = 1 `\ll` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\ll`);
+  }
+  module Binary62 {
+    def infix `\simeq`(left, right) = left;
+    def Direct = 1 `\simeq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\simeq`);
+  }
+  module Binary63 {
+    def infix `\supset`(left, right) = left;
+    def Direct = 1 `\supset` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\supset`);
+  }
+  module Binary64 {
+    def infix `\cong`(left, right) = left;
+    def Direct = 1 `\cong` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\cong`);
+  }
+  module Binary65 {
+    def infix `\sqcap`(left, right) = left;
+    def Direct = 1 `\sqcap` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\sqcap`);
+  }
+  module Binary66 {
+    def infix `\supseteq`(left, right) = left;
+    def Direct = 1 `\supseteq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\supseteq`);
+  }
+  module Binary67 {
+    def infix `\o`(left, right) = left;
+    def Direct = 1 `\o` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\o`);
+  }
+  module Binary68 {
+    def infix `\sqcup`(left, right) = left;
+    def Direct = 1 `\sqcup` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\sqcup`);
+  }
+  module Binary69 {
+    def infix `\div`(left, right) = left;
+    def Direct = 1 `\div` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\div`);
+  }
+  module Binary70 {
+    def infix `\odot`(left, right) = left;
+    def Direct = 1 `\odot` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\odot`);
+  }
+  module Binary71 {
+    def infix `\sqsubset`(left, right) = left;
+    def Direct = 1 `\sqsubset` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\sqsubset`);
+  }
+  module Binary72 {
+    def infix `\uplus`(left, right) = left;
+    def Direct = 1 `\uplus` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\uplus`);
+  }
+  module Binary73 {
+    def infix `\doteq`(left, right) = left;
+    def Direct = 1 `\doteq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\doteq`);
+  }
+  module Binary74 {
+    def infix `\ominus`(left, right) = left;
+    def Direct = 1 `\ominus` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\ominus`);
+  }
+  module Binary75 {
+    def infix `\sqsubseteq`(left, right) = left;
+    def Direct = 1 `\sqsubseteq` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\sqsubseteq`);
+  }
+  module Binary76 {
+    def infix `\wr`(left, right) = left;
+    def Direct = 1 `\wr` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\wr`);
+  }
+  module Binary77 {
+    def infix `\oplus`(left, right) = left;
+    def Direct = 1 `\oplus` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\oplus`);
+  }
+  module Binary78 {
+    def infix `\sqsupset`(left, right) = left;
+    def Direct = 1 `\sqsupset` 2;
+    def Apply(F(_,_)) = F(1,2);
+    def AsArgument = Apply(`\sqsupset`);
+  }
+  module Postfix0 {
+    def postfix `^+`(value) = value;
+    def Direct = 1 `^+`;
+    def Apply(F(_)) = F(1);
+    def AsArgument = Apply(`^+`);
+  }
+  module Postfix1 {
+    def postfix `^*`(value) = value;
+    def Direct = 1 `^*`;
+    def Apply(F(_)) = F(1);
+    def AsArgument = Apply(`^*`);
+  }
+  module Postfix2 {
+    def postfix `^#`(value) = value;
+    def Direct = 1 `^#`;
+    def Apply(F(_)) = F(1);
+    def AsArgument = Apply(`^#`);
+  }
+  module UnaryMinus {
+    def prefix `-`(value) = value;
+    def Direct = -1;
+  }
+}

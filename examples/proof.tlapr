@@ -1,0 +1,9 @@
+module Reflexivity {
+  theorem Identity = forall x: x == x;
+  proof {
+    step take_value: take x;
+    step reflexive: x == x;
+    obvious;
+    qed by ref(reflexive);
+  }
+}

@@ -12,6 +12,8 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/s4na/tlapr/compiler"
@@ -28,9 +30,12 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, `使い方:
   tlapr compile [-o DIR] [-allow-deadlock] FILE
   tlapr check [-jar PATH] [-timeout 60s] [-allow-deadlock] FILE
+  tlapr validate [-jar PATH] [-timeout 60s] FILE
 
 compile: TLA+、TLC設定、ソース対応表を出力します（既定: ./out）。
 check:   JavaとTLCを使って検査します。jarはTLA2TOOLS_JARでも指定できます。
+validate: SANYで構文・名前・式のレベルを検査します。証明内容の正しさは検証しません。
+checkとvalidateは入力ファイルと同じディレクトリのTLA+モジュールも参照できます。
 フラグは入力ファイルより前に指定してください。`)
 }
 
@@ -44,7 +49,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	command := args[0]
-	if command != "compile" && command != "check" {
+	if command != "compile" && command != "check" && command != "validate" {
 		fmt.Fprintf(stderr, "不明なコマンド: %s\n", command)
 		usage(stderr)
 		return 2
@@ -56,14 +61,17 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		usage(stderr)
 		flags.PrintDefaults()
 	}
-	allowDeadlock := flags.Bool("allow-deadlock", false, "到達した終端状態をエラーにしない（デッドロック検査を無効化）")
+	var allowDeadlock bool
+	if command != "validate" {
+		flags.BoolVar(&allowDeadlock, "allow-deadlock", false, "到達した終端状態をエラーにしない（デッドロック検査を無効化）")
+	}
 	var outDir, jar string
 	var timeout time.Duration
 	if command == "compile" {
 		flags.StringVar(&outDir, "o", "out", "生成ファイルの出力先")
 	} else {
 		flags.StringVar(&jar, "jar", os.Getenv("TLA2TOOLS_JAR"), "tla2tools.jar のパス")
-		flags.DurationVar(&timeout, "timeout", 60*time.Second, "TLCの実行制限時間（正の時間）")
+		flags.DurationVar(&timeout, "timeout", 60*time.Second, "検査の実行制限時間（正の時間）")
 	}
 	if err := flags.Parse(args[1:]); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -75,8 +83,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "入力ファイルを1つ指定してください。フラグは入力ファイルより前に置きます。")
 		return 2
 	}
-	if command == "check" && (jar == "" || timeout <= 0) {
-		fmt.Fprintln(stderr, "checkには -jar または TLA2TOOLS_JAR と、正の -timeout が必要です。")
+	if command != "compile" && (jar == "" || timeout <= 0) {
+		fmt.Fprintf(stderr, "%sには -jar または TLA2TOOLS_JAR と、正の -timeout が必要です。\n", command)
 		return 2
 	}
 
@@ -86,7 +94,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
-	output, err := compiler.Compile(sourcePath, source, compiler.Options{AllowDeadlock: *allowDeadlock})
+	output, err := compiler.Compile(sourcePath, source, compiler.Options{AllowDeadlock: allowDeadlock})
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
@@ -104,6 +112,9 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 			}
 		}
 		return 0
+	}
+	if command == "validate" {
+		return validate(ctx, sourcePath, output, jar, timeout, stdout, stderr)
 	}
 	return check(ctx, sourcePath, output, jar, timeout, stdout, stderr)
 }
@@ -152,6 +163,22 @@ func writeOutput(dir, sourcePath string, output *compiler.Output) ([]string, err
 }
 
 func check(ctx context.Context, sourcePath string, output *compiler.Output, jar string, timeout time.Duration, stdout, stderr io.Writer) int {
+	if strings.TrimSpace(output.Config) == "" {
+		fmt.Fprintln(stderr, "checkにはTLCのconfigブロックが必要です。構文・意味の検査にはvalidateを使ってください。")
+		return 1
+	}
+	return runJavaTool(ctx, sourcePath, output, jar, timeout, false, stdout, stderr)
+}
+
+func validate(ctx context.Context, sourcePath string, output *compiler.Output, jar string, timeout time.Duration, stdout, stderr io.Writer) int {
+	return runJavaTool(ctx, sourcePath, output, jar, timeout, true, stdout, stderr)
+}
+
+func runJavaTool(ctx context.Context, sourcePath string, output *compiler.Output, jar string, timeout time.Duration, validation bool, stdout, stderr io.Writer) int {
+	tool := "TLC"
+	if validation {
+		tool = "SANY"
+	}
 	jar, err := filepath.Abs(jar)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
@@ -159,7 +186,12 @@ func check(ctx context.Context, sourcePath string, output *compiler.Output, jar 
 	}
 	info, err := os.Stat(jar)
 	if err != nil || !info.Mode().IsRegular() {
-		fmt.Fprintf(stderr, "TLCのjarファイルを読み込めません: %s\n", jar)
+		fmt.Fprintf(stderr, "%sのjarファイルを読み込めません: %s\n", tool, jar)
+		return 1
+	}
+	sourceDir, err := filepath.Abs(filepath.Dir(sourcePath))
+	if err != nil {
+		fmt.Fprintln(stderr, err)
 		return 1
 	}
 	dir, err := os.MkdirTemp("", "tlapr-*")
@@ -175,21 +207,32 @@ func check(ctx context.Context, sourcePath string, output *compiler.Output, jar 
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "java", "-XX:+UseParallelGC", "-jar", jar,
-		"-workers", "1", "-config", output.Module+".cfg", output.Module+".tla")
+	args := []string{"-XX:+UseParallelGC", "-DTLA-Library=" + sourceDir}
+	if validation {
+		args = append(args, "-cp", jar, "tla2sany.SANY", output.Module+".tla")
+	} else {
+		args = append(args, "-jar", jar, "-workers", "1", "-config", output.Module+".cfg", output.Module+".tla")
+	}
+	cmd := exec.CommandContext(ctx, "java", args...)
 	cmd.Dir = dir
 	cmd.WaitDelay = time.Second
 	out := newSymbolWriter(stdout, sourcePath, output.Symbols)
 	errOut := newSymbolWriter(stderr, sourcePath, output.Symbols)
 	cmd.Stdout, cmd.Stderr = out, errOut
+	var sanyOut, sanyErr *sanyStatusWriter
+	if validation {
+		sanyOut = newSANYStatusWriter(out, output.Module)
+		sanyErr = newSANYStatusWriter(errOut, output.Module)
+		cmd.Stdout, cmd.Stderr = sanyOut, sanyErr
+	}
 	runErr := cmd.Run()
 	flushErr := errors.Join(out.Flush(), errOut.Flush())
 	if err := ctx.Err(); err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			fmt.Fprintf(stderr, "TLCが制限時間 %s を超えました。検証は完了していません。\n", timeout)
+			fmt.Fprintf(stderr, "%sが制限時間 %s を超えました。検証は完了していません。\n", tool, timeout)
 			return 124
 		}
-		fmt.Fprintln(stderr, "TLCの実行を中断しました。検証は完了していません。")
+		fmt.Fprintf(stderr, "%sの実行を中断しました。検証は完了していません。\n", tool)
 		return 130
 	}
 	if flushErr != nil {
@@ -198,16 +241,84 @@ func check(ctx context.Context, sourcePath string, output *compiler.Output, jar 
 	}
 	if runErr != nil {
 		if exitErr, ok := errors.AsType[*exec.ExitError](runErr); ok {
-			fmt.Fprintf(stderr, "TLCは終了コード %d で終了しました。\n", exitErr.ExitCode())
+			fmt.Fprintf(stderr, "%sは終了コード %d で終了しました。\n", tool, exitErr.ExitCode())
 			if exitErr.ExitCode() > 0 {
 				return exitErr.ExitCode()
 			}
 		} else {
-			fmt.Fprintf(stderr, "TLCを実行できません: %v\n", runErr)
+			fmt.Fprintf(stderr, "%sを実行できません: %v\n", tool, runErr)
 		}
 		return 1
 	}
+	if validation {
+		sanyOut.finishLine()
+		sanyErr.finishLine()
+		if sanyOut.failed || sanyErr.failed || !(sanyOut.processedRoot || sanyErr.processedRoot) {
+			fmt.Fprintln(stderr, "SANYがエラーを報告したか、対象モジュールの意味解析を確認できません。検証は成功していません。")
+			return 1
+		}
+		if _, err := fmt.Fprintln(stdout, "SANYによる構文・名前・式のレベル検査が成功しました。"); err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+	}
 	return 0
+}
+
+// The SANY entry point in tla2tools 1.7.4 exits zero for semantic and level
+// errors. Track its diagnostics as well as the process exit code. Requiring
+// the root's semantic-processing message also rejects an empty/partial run.
+// Keep only a bounded line prefix; even very large diagnostics are streamed.
+type sanyStatusWriter struct {
+	out           io.Writer
+	rootLine      string
+	prefix        []byte
+	limit         int
+	overflow      bool
+	processedRoot bool
+	failed        bool
+}
+
+func newSANYStatusWriter(out io.Writer, module string) *sanyStatusWriter {
+	rootLine := "Semantic processing of module " + module
+	return &sanyStatusWriter{out: out, rootLine: rootLine, limit: max(256, len(rootLine)+1)}
+}
+
+func (w *sanyStatusWriter) Write(p []byte) (int, error) {
+	n, err := w.out.Write(p)
+	for _, b := range p[:n] {
+		if b == '\n' {
+			w.finishLine()
+		} else if len(w.prefix) < w.limit {
+			w.prefix = append(w.prefix, b)
+		} else {
+			w.overflow = true
+		}
+	}
+	if err == nil && n != len(p) {
+		err = io.ErrShortWrite
+	}
+	return n, err
+}
+
+func (w *sanyStatusWriter) finishLine() {
+	line := strings.TrimSuffix(string(w.prefix), "\r")
+	if !w.overflow && line == w.rootLine {
+		w.processedRoot = true
+	}
+	for _, marker := range []string{"*** Errors:", "*** Abort messages:"} {
+		if number, found := strings.CutPrefix(line, marker); found {
+			count, err := strconv.Atoi(strings.TrimSpace(number))
+			if err != nil || count != 0 || w.overflow {
+				w.failed = true
+			}
+		}
+	}
+	if strings.HasPrefix(line, "***Parse Error***") || strings.HasPrefix(line, "Fatal errors") {
+		w.failed = true
+	}
+	w.prefix = w.prefix[:0]
+	w.overflow = false
 }
 
 // symbolWriter retains only an incomplete identifier, so counterexample traces

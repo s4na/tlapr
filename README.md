@@ -1,8 +1,10 @@
 # tlapr
 
-読み慣れた代入と条件式で状態遷移を書き、TLA+へ変換するGo製の仕様言語・CLIです。コンパイラはLLMを介さず、構文解析・型検査・コード生成を決定論的に行います。生成した仕様は[TLC](https://github.com/tlaplus/tlaplus)で検査できます。
+状態遷移・時相的性質・定理・証明を記述し、TLA+へ変換するGo製の仕様言語・CLIです。コンパイラはLLMを介さず、構文解析とコード生成を決定論的に行います。生成した仕様は[SANY・TLC](https://github.com/tlaplus/tlaplus)で検査できます。
 
-現在は `Int` / `Bool` の状態、action、事前条件、不変条件を扱う最小実装です。Goの外部パッケージ依存はありません。TLA+への変換はGoだけで動き、モデル検査にはJavaとTLCが必要です。
+2つの構文を使えます。`model` は `Int` / `Bool` の状態を、型検査付きの代入と条件式で記述します。`module` は集合・関数・モジュール・時相論理・公平性・定理・階層証明を扱い、TLA+2の構成要素を表現します。[module構文の仕様と文法対応表](docs/module-language.md)に、書き方と検証範囲をまとめています。
+
+Goの外部パッケージ依存はありません。TLA+への変換はGoだけで動き、名前・式のレベルの検査やモデル検査にはJavaとtla2tools.jarが必要です。
 
 ## 使ってみる
 
@@ -22,7 +24,7 @@ go run ./cmd/tlapr compile -o out examples/inventory.tlapr
 
 ### TLCで検査する
 
-Java 21と、公式リリースのTLC v1.7.4を使用します。以下はmacOS / Linuxでの取得例です。CLIがTLCを自動取得することはありません。
+Java 21と、公式リリースのTLA+ Tools v1.7.4に含まれるTLCを使用します。以下はmacOS / Linuxでの取得例です。CLIがTLCを自動取得することはありません。
 
 ```sh
 mkdir -p .tools
@@ -53,10 +55,11 @@ go run ./cmd/tlapr check examples/inventory_bug.tlapr
 
 ```text
 tlapr compile [-o DIR] [-allow-deadlock] FILE
+tlapr validate [-jar PATH] [-timeout 60s] FILE
 tlapr check [-jar PATH] [-timeout 60s] [-allow-deadlock] FILE
 ```
 
-フラグは入力ファイルより前に指定します。`-jar` を省略すると `TLA2TOOLS_JAR` を読み、`check` の制限時間は既定で60秒です。コンパイル結果のデッドロック検査も無効にする場合は、`compile` に `-allow-deadlock` を指定してください。
+フラグは入力ファイルより前に指定します。`-jar` を省略すると `TLA2TOOLS_JAR` を読み、`validate` / `check` の制限時間は既定で60秒です。コンパイル結果のデッドロック検査も無効にする場合は、`compile` に `-allow-deadlock` を指定してください。
 
 通常のバイナリとしても利用できます。
 
@@ -65,7 +68,7 @@ go build -o bin/tlapr ./cmd/tlapr
 ./bin/tlapr check -jar .tools/tla2tools.jar -allow-deadlock examples/inventory.tlapr
 ```
 
-## 仕様を書く
+## modelで状態遷移を書く
 
 ```text
 model Inventory {
@@ -124,15 +127,35 @@ action advance {
 
 actionで代入しなかった変数は、TLA+の `UNCHANGED` により値を維持します。現実の実装で他の処理が割り込める境界を調べる場合は、その境界でactionを分けてモデル化してください。
 
-## 検査できる範囲
+## modelの検査範囲
 
-この実装は、記述したモデルの不変条件とデッドロックをTLCで調べます。実装コードの生成、既存コードとの一致の証明、最終的に処理が完了することの検証は行いません。要求を正しくモデル化できているかは、仕様のレビューが必要です。
+`model` は不変条件とデッドロックをTLCで調べます。時相的性質は後述の `module` で記述できます。実装コードの生成や既存コードとの一致の証明は行いません。要求を正しくモデル化できているかは、仕様のレビューが必要です。
 
 `Int` は有限個の値に自動制限されません。初期値とガードを設計し、到達状態が有限になるモデルを使ってください。無制限に増えるカウンタや非常に大きな状態空間は、検査が終わらない場合があります。タイムアウトは検証成功を意味しません。
 
-TLCの整数実装に合わせ、整数リテラルは符号付き32ビットの範囲（−2,147,483,648〜2,147,483,647）に制限しています。TLCが評価する式の計算結果がこの範囲を超えると実行エラーになる場合があり、その場合は検証成功にしません。任意精度の整数演算を保証するものではありません。
+`model` ではTLCの整数実装に合わせ、整数リテラルは符号付き32ビットの範囲（−2,147,483,648〜2,147,483,647）に制限しています。TLCが評価する式の計算結果がこの範囲を超えると実行エラーになる場合があり、その場合は検証成功にしません。任意精度の整数演算を保証するものではありません。
 
-現在はコレクション、文字列、actionの引数、関数、条件分岐・ループ、時相的な性質、公平性を扱いません。仕様の全状態を変えない遷移を許すTLA+の `Spec` を出力しますが、デッドロック検査を自動で無効にはしません。
+`model` は仕様の全状態を変えない遷移を許すTLA+の `Spec` を出力しますが、デッドロック検査を自動で無効にはしません。
+
+## moduleで集合・時相論理・証明を書く
+
+[`examples/queue.tlapr`](examples/queue.tlapr) は、集合・列・引数付きactionを使ったキューです。公平性を仮定し、全アイテムが最終的に処理される性質を検査します。
+
+```sh
+go run ./cmd/tlapr compile -o out examples/queue.tlapr
+go run ./cmd/tlapr validate -jar .tools/tla2tools.jar examples/queue.tlapr
+go run ./cmd/tlapr check -jar .tools/tla2tools.jar examples/queue.tlapr
+```
+
+`module` では `var` と `def` で状態や式を記述します。`next(x)` は次の状態の値、`always` / `eventually` は時相演算子です。`config` に初期条件・遷移の仕様、不変条件、検査する性質を指定します。`model` と違い、式はTLA+の集合論に従い、更新しない状態の `unchanged` も明示します。
+
+定理と階層証明の例は [`examples/proof.tlapr`](examples/proof.tlapr) です。
+
+```sh
+go run ./cmd/tlapr validate -jar .tools/tla2tools.jar examples/proof.tlapr
+```
+
+`validate` はSANYによる構文・名前・式のレベルの検査です。証明内容の正しさを確認するにはTLAPSなどが別途必要です。TLCが扱わない構文や、公式文法と固定したSANYの差異は、[module構文の制限](docs/module-language.md#ツールの制限)に記載しています。
 
 ## 開発と検証
 
@@ -144,14 +167,14 @@ go build ./...
 
 通常のGoテストはJavaやTLCなしで実行できます。演算子・結合順序、型と診断、actionごとの代入環境、ソース対応表、CLIの失敗処理などを検査します。
 
-実際のTLCを使う検証は、`tlapr_integration` タグを付けて実行します。このタグを指定したのに `TLA2TOOLS_JAR` やJavaがない場合は失敗します。CIで検証が省略されたまま成功することを防ぎます。
+実際のSANY・TLCを使う検証は、`tlapr_integration` タグを付けて実行します。このタグを指定したのに `TLA2TOOLS_JAR` やJavaがない場合は失敗します。CIで検証が省略されたまま成功することを防ぎます。
 
 ```sh
 TLA2TOOLS_JAR="$PWD/.tools/tla2tools.jar" \
-  go test -tags=tlapr_integration -run '^(TestTLC|TestTLAPR)' -count=1 -v ./compiler
+  go test -tags=tlapr_integration -run '^(TestTLC|TestTLAPR)' -count=1 -v ./...
 ```
 
-GitHub Actionsでは **「Go単体テスト」** と **「tlapr変換検証」** を別々のジョブで実行します。後者は固定バージョンのTLCをチェックサム検証して使用します。
+GitHub Actionsでは **「Go単体テスト」** と **「tlapr変換検証」** を別々のジョブで実行します。後者は固定バージョンのjarをチェックサム検証し、コンパイラとCLIの実SANY・TLCテストを実行します。
 
 ### tlapr自身を使った変換の検査
 
@@ -178,11 +201,13 @@ JSONの `states` は状態変数の値、`initial` は初期状態の配列index
 
 さらに、生成結果をテスト内で意図的に変更し、増分の間違い・actionの欠落・余計な遷移・不変条件の欠落を検出できることを確認します。余計な遷移のケースでは状態集合と不変条件の成否は変わらず、辺の比較だけが違いを捉えます。本体のコードを書き換えて実行するテストではありません。
 
-これは有限なモデルによる回帰検証です。コンパイラ全体の意味保存を数学的に証明するものではありません。グラフの読取りは固定したTLC v1.7.4のInt/Bool向けDOT形式に限定し、未対応の形式を読み飛ばさずエラーにします。
+`module` の構文は [`compiler/testdata/modules`](compiler/testdata/modules) をSANYに渡して検査します。[集合・非決定性・公平性の検証モデル](compiler/testdata/module_conformance)では、集合・レコード・関数・列を含む状態値、複数の初期状態、弱公平性・強公平性を調べます。SANYがエラーでも終了コード0を返すケースは、CLI側で診断を確認して失敗させるテストも用意しています。
+
+これは有限なモデルによる回帰検証です。コンパイラ全体の意味保存を数学的に証明するものではありません。グラフの読取りはTLA+ Tools v1.7.4付属のTLCのDOT形式を対象にし、未知の形式を読み飛ばさずエラーにします。既存modelのInt/Bool比較と、moduleの有限値の文字列表現を使った比較を実行します。
 
 ## 参照
 
 - [TLA+ / TLCの公式リポジトリ](https://github.com/tlaplus/tlaplus)
-- [TLC v1.7.4](https://github.com/tlaplus/tlaplus/releases/tag/v1.7.4)
+- [TLA+ Tools v1.7.4](https://github.com/tlaplus/tlaplus/releases/tag/v1.7.4)
 - [Lamportによる原子的なステップとTLA+変換の説明](https://lamport.azurewebsites.net/tla/tutorial/session6.html)
 - [TLA+ツールの制限とコマンドラインオプション](https://lamport.azurewebsites.net/tla/current-tools.pdf)

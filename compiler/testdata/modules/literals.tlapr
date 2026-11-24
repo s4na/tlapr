@@ -1,0 +1,15 @@
+/* A newline-independent module with nested /* block */ comments. */
+module Literals extends Reals {
+  def Decimal = 2147483648;
+  def Fraction = .25;
+  def FractionWithWhole = 1.5;
+  def Binary = \b101;
+  def Octal = \o17;
+  def Hexadecimal = \hFF;
+  def Text = "quote: \" slash: \\ newline: \n";
+  def `next` = true;
+  def KeywordReference = `next`;
+  (* TLA-style (* nested *) block comment. *)
+  def 2ndName = 2;
+  def NameWithDigit = 2ndName;
+}

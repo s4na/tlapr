@@ -55,4 +55,4 @@ jobs:
             "$RUNNER_TEMP/tla2tools.jar" | sha256sum --check
           echo "TLA2TOOLS_JAR=$RUNNER_TEMP/tla2tools.jar" >> "$GITHUB_ENV"
       - name: tlaprモデル・独立した期待値・変換ミスの検出
-        run: go test -tags=tlapr_integration -run '^(TestTLC|TestTLAPR)' -count=1 -v ./compiler
+        run: go test -tags=tlapr_integration -run '^(TestTLC|TestTLAPR)' -count=1 -v ./...

@@ -1,0 +1,104 @@
+module Expressions extends Integers, Reals, Sequences, FiniteSets {
+  const S, T;
+  var x, y;
+
+  def Numbers = tuple(0, 1.25, .5, \b101, \o7, \hff);
+  def Strings = "quote: \"; slash: \\";
+  def Logic(p, q) = !p || q && (p implies q) iff (p == q);
+  def Arithmetic(a, b) = (a + b) * (a - b) / 2;
+  def IntegerOps(a, b) = (a \div b) + (a % b) + (a ^ b);
+  def Relations(a, b) = all { a <= b; b >= a; a != b; a < b; b > a; };
+
+  def Enumerated = {1, 2, 3};
+  def Empty = {};
+  def SetOps = (S union T) intersect (S difference T);
+  def Membership(a) = a in S && a notin T && S subsetof (S union T);
+  def Power = powerset S;
+  def Flatten = union {S, T};
+  def Range = 1..3;
+  def Filter = {a in S: a > 1};
+  def Image = {a + b: a in S, b in T};
+  def TupleFilter = {<<a, b>> in (S cross T): a == b};
+  def Product = S cross T cross S;
+
+  def AFunction = function(a in S, b in T) => a + b;
+  def FunctionSpace = functions(S, T);
+  def FunctionDomain = domain AFunction;
+  def Application(a, b) = AFunction[a, b];
+  def ARecord = record {count: 1, ready: true};
+  def RecordSpace = recordset {count: Int, ready: BOOLEAN};
+  def ReservedRecord = record {`IF`: 1};
+  def ReservedField = ReservedRecord.`IF`;
+  def ReservedUpdate = update(ReservedRecord) { .`IF` = @ + 1; };
+  def Field = ARecord.count;
+  def Updated = update(ARecord) { .count = @ + 1; .ready = false; };
+  def NestedUpdate(f) = update(f) { [1].count = @ + 1; [2] = 3; };
+  def Tuple = <<1, true, "three">>;
+  def EmptyTuple = <<>>;
+
+  def Bounded = forall a, b in S, c in T: (a == b) implies (a == c);
+  def TupleBound = exists <<a, b>> in (S cross T): a == b;
+  def Unbounded = forall a, b: a == b implies b == a;
+  def Selected = choose a in S: a == a;
+  def SelectedTuple = choose <<a, b>> in (S cross T): a == b;
+  def UnboundedChoice = choose a: a == 0;
+  def Conditional(a) = if a == 0 then 1 else 2;
+  def Cases(a) = case { a == 0 -> 1; a == 1 -> 2; else -> 3; };
+  def Disjunction = any { x == 0; x == 1; };
+  def Locals(a) = let { def Twice(b) = b * 2; def Offset = 1; } in Twice(a) + Offset;
+  def LocalFunction = let { def f[a in S] = a; } in f;
+  def LocalRecursive(n) = let {
+    recursive F(_);
+    def F(a) = if a == 0 then n else F(a - 1);
+  } in F(3);
+  def Apply(F(_), a) = F(a);
+  def Lambda = Apply(lambda a: a + 1, 3);
+  def Apply2(F(_, _), a, b) = F(a, b);
+  def OperatorArgument = Apply2(`+`, 1, 2);
+  def Labelled = result :: 1 + 2;
+  def LabelReference = Labelled!result;
+  def ParameterLabel(a) = forall b in S: result(b) :: a == b;
+  def ParameterReference = ParameterLabel(1)!result(2);
+  def NumericReference = Labelled!result!1;
+  def LeftReference = Labelled!result!<<;
+  def RightReference = Labelled!result!>>;
+  def BodyReference = TupleBound!(1, 2);
+  def BoundOperatorReference = Apply2(TupleBound!@, 1, 2);
+  def LetDefinitionReference = Locals(1)!:!Twice(3);
+
+  def LocalInstance = let { def M = instance Integers; } in M!+(1, 2);
+  def infix `++`(a, b) = a + b;
+  def postfix `^+`(a) = a + 1;
+  def InfixHeadReference = ++(1, 2)!1;
+  def PostfixHeadReference = ^+(1)!2;
+  def PrefixHeadReference = -.(2)!:;
+
+  def Initial = x == 0 && y == 0;
+  def Advance = next(x) == x + 1 && unchanged y;
+  def Enabled = enabled Advance;
+  def Composed = Advance compose Advance;
+  def Stuttering = stutter(Advance, <<x, y>>);
+  def Nonstuttering = nonstutter(Advance, <<x, y>>);
+  def Always = always stutter(Advance, <<x, y>>);
+  def Eventually = eventually (x > 0);
+  def LeadsTo = (x == 0) leadsTo (x > 0);
+  def Weak = weakFair(<<x, y>>, Advance);
+  def Strong = strongFair(<<x, y>>, Advance);
+  def Guarantee = (always (x >= 0)) -+-> (always (y >= 0));
+  def TemporalAll = temporalForall z: always (z == z);
+  def TemporalSome = temporalExists z: always (z == z);
+
+  // Native collection notation has the same parsed structure as the aliases.
+  def NativeFunction = [a \in S |-> a];
+  def NativeFunctionSpace = [S -> T];
+  def NativeRecord = [count |-> 1, ready |-> TRUE];
+  def NativeRecordSpace = [count: Int, ready: BOOLEAN];
+  def NativeUpdate = [NativeRecord EXCEPT !.count = @ + 1];
+  def NativeStuttering = [Advance]_<<x, y>>;
+  def NativeNonstuttering = <<Advance>>_<<x, y>>;
+  def NativeFair = WF_<<x, y>>(Advance) /\ SF_<<x, y>>(Advance);
+  def NativeIf(a) = IF a = 0 THEN 1 ELSE 2;
+  def NativeCase(a) = CASE a = 0 -> 1 [] OTHER -> 2;
+  def NativeQuantifier = \A a \in S : a = a;
+  def NativeChoose = CHOOSE a \in S : a = a;
+}
