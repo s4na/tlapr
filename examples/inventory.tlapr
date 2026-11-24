@@ -1,0 +1,25 @@
+model Inventory {
+  state {
+    stock: Int = 10
+    sold: Int = 0
+    paused: Bool = false
+  }
+
+  action purchase {
+    require !paused && stock > 0
+    stock -= 1
+    sold += 1
+  }
+
+  invariant nonnegative {
+    stock >= 0
+  }
+
+  invariant conserved {
+    stock + sold == 10
+  }
+
+  invariant unpaused {
+    !paused
+  }
+}
