@@ -1,0 +1,14 @@
+// 在庫切れでも購入できるバグを、TLCが検出する例。
+model InventoryBug {
+  state {
+    stock: Int = 2
+  }
+
+  action purchase {
+    stock -= 1
+  }
+
+  invariant nonnegative {
+    stock >= 0
+  }
+}
