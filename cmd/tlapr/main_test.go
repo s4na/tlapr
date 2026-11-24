@@ -32,16 +32,45 @@ const inventorySource = `model Inventory {
 // is covered separately; these cases exercise process handling by the CLI.
 func TestMain(m *testing.M) {
 	if mode := os.Getenv("TLAPR_TEST_JAVA_MODE"); mode != "" && len(os.Args) > 1 && os.Args[1] == "-XX:+UseParallelGC" {
-		if len(os.Args) != 9 || os.Args[2] != "-jar" || !filepath.IsAbs(os.Args[3]) ||
-			os.Args[4] != "-workers" || os.Args[5] != "1" || os.Args[6] != "-config" {
+		if len(os.Args) < 7 || !strings.HasPrefix(os.Args[2], "-DTLA-Library=") ||
+			!filepath.IsAbs(strings.TrimPrefix(os.Args[2], "-DTLA-Library=")) || !filepath.IsAbs(os.Args[4]) {
 			fmt.Fprintln(os.Stderr, "unexpected Java invocation")
 			os.Exit(99)
 		}
-		for _, path := range []string{os.Args[7], os.Args[8], "Tlapr_Inventory.map.json"} {
+		module := strings.TrimSuffix(os.Args[len(os.Args)-1], ".tla")
+		for _, path := range []string{module + ".cfg", module + ".tla", module + ".map.json"} {
 			if _, err := os.Stat(path); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(99)
 			}
+		}
+		if os.Args[3] == "-cp" {
+			if len(os.Args) != 7 || os.Args[5] != "tla2sany.SANY" {
+				fmt.Fprintln(os.Stderr, "unexpected SANY invocation")
+				os.Exit(99)
+			}
+			if mode == "sany-empty" {
+				os.Exit(0)
+			}
+			fmt.Fprintln(os.Stdout, "Semantic processing of module "+module)
+			switch mode {
+			case "sany-semantic", "sany-level":
+				fmt.Fprintln(os.Stdout, "Semantic errors:\n\n*** Errors: 1\n\ninvalid expression")
+			case "sany-abort":
+				fmt.Fprintln(os.Stderr, "*** Abort messages: 1\n\naborted")
+			case "sany-warnings":
+				fmt.Fprintln(os.Stdout, "Semantic errors:\n\n*** Warnings: 1\n\nwarning only")
+			case "sany-crash":
+				os.Exit(17)
+			case "timeout":
+				time.Sleep(time.Minute)
+			}
+			os.Exit(0)
+		}
+		if len(os.Args) != 10 || os.Args[3] != "-jar" ||
+			os.Args[5] != "-workers" || os.Args[6] != "1" || os.Args[7] != "-config" {
+			fmt.Fprintln(os.Stderr, "unexpected TLC invocation")
+			os.Exit(99)
 		}
 		switch mode {
 		case "failure":
@@ -52,7 +81,7 @@ func TestMain(m *testing.M) {
 		case "timeout":
 			time.Sleep(time.Minute)
 		case "allow-deadlock":
-			cfg, err := os.ReadFile(os.Args[7])
+			cfg, err := os.ReadFile(os.Args[8])
 			if err != nil || !strings.Contains(string(cfg), "CHECK_DEADLOCK FALSE") {
 				fmt.Fprintln(os.Stderr, "deadlock configuration was not passed to TLC")
 				os.Exit(99)
@@ -169,6 +198,9 @@ func TestUsageErrors(t *testing.T) {
 		{"compile", "a.tlapr", "-o", "out"},
 		{"check", "a.tlapr"},
 		{"check", "-jar", "tlc.jar", "-timeout", "0s", "a.tlapr"},
+		{"validate", "a.tlapr"},
+		{"validate", "-jar", "tlc.jar", "-timeout", "-1s", "a.tlapr"},
+		{"validate", "-jar", "tlc.jar", "-allow-deadlock", "a.tlapr"},
 	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
 			var stderr bytes.Buffer

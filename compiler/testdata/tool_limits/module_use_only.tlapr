@@ -1,0 +1,5 @@
+// 公式TLA+2文法にはあるが、tla2tools v1.7.4のSANYはmodule-level USE ONLYを受理しない。
+// USEへ書き換えると証明の文脈を変えてしまうため、忠実に生成してvalidateで失敗を報告する。
+module ModuleUseOnly {
+  use only true;
+}

@@ -1,0 +1,19 @@
+module Nondeterminism extends Integers {
+  var count, flipped;
+
+  def Init = count in {0, 1} && flipped == false;
+  def Move(delta) = all {
+    count + delta <= 2;
+    next(count) == count + delta;
+    next(flipped) == !flipped;
+  };
+  def Next = exists delta in {1, 2}: Move(delta);
+  def Safe = count in 0..2 && flipped in BOOLEAN;
+  def Spec = Init && always stutter(Next, tuple(count, flipped));
+
+  config {
+    specification Spec;
+    invariant Safe;
+    checkDeadlock false;
+  }
+}

@@ -1,0 +1,13 @@
+module QuotedNames {
+  const `infix`, `postfix`;
+  def `prefix` = true;
+  def `instance` = true;
+  def Reference = `instance`;
+  theorem `theorem` = `prefix`;
+  proof {
+    step `step`: true;
+    obvious;
+    step: define { def `local` = true; };
+    qed by ref(`step`) def `local`;
+  }
+}

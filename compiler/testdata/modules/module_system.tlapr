@@ -1,0 +1,34 @@
+module ModuleSystem extends Integers {
+  const Limit, Predicate(_);
+  var stateValue;
+  recursive Factorial(_), Even(_), Odd(_);
+  def Factorial(n) = if n == 0 then 1 else n * Factorial(n - 1);
+  def Even(n) = if n == 0 then true else Odd(n - 1);
+  def Odd(n) = if n == 0 then false else Even(n - 1);
+  def Indexed[n in 0..3] = n * n;
+  def Apply(F(_), value) = F(value);
+  def Applied = Apply(lambda x: x + 1, 2);
+  local def PrivateValue = 1;
+  assume PositiveLimit = Limit > 0;
+  axiom PredicateExists = exists x: Predicate(x);
+
+  module Inner {
+    const Base, Transform(_);
+    def Result = Transform(Base);
+  }
+
+  def Fixed = instance Inner with Base = 2, Transform = lambda x: x + 1;
+  def Parameterized(value) = instance Inner with Base = value, Transform = lambda x: x;
+  local instance Inner with Base = 4, Transform = lambda x: x;
+  def InstanceValues = <<Fixed!Result, Parameterized(5)!Result, Result>>;
+
+  module Operators {
+    const infix `++`, postfix `^+`;
+    def Combine(a, b) = a ++ b;
+  }
+  def Symbolic = instance Operators with `++` = `+`, `^+` = lambda x: x;
+  def InstanceOperator = Symbolic!Combine(1, 2);
+
+  theorem DefinitionsExist = Factorial(3) == 6;
+  proof omitted;
+}

@@ -1,0 +1,39 @@
+module Collections extends Integers, Sequences, FiniteSets {
+  const Keys, First;
+  var phase, pending, item, mapping, queue;
+
+  def Init = all {
+    phase == 0;
+    pending == {1, 2};
+    item == record {count: 0, ready: false};
+    mapping == (function(key in Keys) => 0);
+    queue == tuple(2, 3);
+  };
+
+  def Advance = all {
+    phase == 0;
+    next(phase) == 1;
+    next(pending) == pending \ {First};
+    next(item) == update(item) { .count = @ + 1; .ready = true; };
+    next(mapping) == update(mapping) { [4] = @ + 2; };
+    next(queue) == Append(Tail(queue), Head(queue));
+  };
+
+  def Safe = all {
+    phase in {0, 1};
+    Cardinality(pending) == 2 - phase;
+    item.count == phase;
+    item.ready == (phase == 1);
+    domain mapping == Keys;
+    Len(queue) == 2;
+  };
+  def Spec = Init && always stutter(Advance, tuple(phase, pending, item, mapping, queue));
+
+  config {
+    constant Keys = {2, 4};
+    constant First = 1;
+    specification Spec;
+    invariant Safe;
+    checkDeadlock false;
+  }
+}

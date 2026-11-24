@@ -1,0 +1,153 @@
+// 証明用構文と名前・レベルの検査用。omitted は証明済みを意味しない。
+module Proofs extends Naturals {
+  def Identity(x) = x;
+  def One = 1;
+
+  module Helper {
+    const Value;
+    def Get = Value;
+  }
+  def H = instance Helper with Value <- 1;
+
+  assume NamedAssumption = true;
+  axiom true;
+  use true def Identity;
+  hide NamedAssumption def Identity;
+
+  theorem Reflexivity = forall x: x == x;
+  proof {
+    step take_value: take x;
+    step reflexive: x == x;
+    obvious;
+    qed by ref(reflexive);
+  }
+
+  lemma Nested = true;
+  proof {
+    step outer: true;
+    proof {
+      step inner: true;
+      by only true;
+      qed by ref(inner);
+    }
+    qed by ref(outer);
+  }
+
+  proposition Suffices = true;
+  proof {
+    step reduce: suffices true;
+    omitted;
+    step positive_case: case true;
+    obvious;
+    qed omitted;
+  }
+
+  corollary Existential = exists x in {1, 2}: x > 0;
+  proof {
+    step choose_value: witness 1;
+    step result: have 1 > 0;
+    qed by only true def One;
+  }
+
+  theorem BoundedPick = exists x in {1}: x == 1;
+  proof {
+    step chosen: pick x in {1}: x == 1;
+    obvious;
+    qed by ref(chosen);
+  }
+
+  theorem UnboundedPick = exists x: x == 1;
+  proof {
+    step chosen: pick x: x == 1;
+    omitted;
+    qed omitted;
+  }
+
+  theorem TupleTake = forall <<x, y>> in {<<1, 2>>}: x < y;
+  proof {
+    step pair: take <<x, y>> in {<<1, 2>>};
+    qed omitted;
+  }
+
+  theorem DefinitionSteps = true;
+  proof {
+    step definitions: define {
+      def LocalIdentity(x) = x;
+      def LocalFunction[x in {1, 2}] = x;
+      def LocalModule = instance Helper with Value <- 1;
+    };
+    step direct_definition: def Answer = 42;
+    step imported: instance Helper with Value <- 2;
+    step visible: use only true def LocalIdentity, LocalFunction, LocalModule!Get;
+    step hidden: hide NamedAssumption def Answer;
+    qed by true def Identity, H!Get;
+  }
+
+  theorem NewDeclarations = assume {
+    new constant c;
+    new variable v;
+    new state S;
+    new action A;
+    new temporal T;
+    new constant F(_);
+    new x in {1, 2};
+    variable w;
+    state P(_);
+    action B(_);
+    temporal Q(_);
+  } prove true;
+  omitted;
+
+  theorem NestedAssumptions = assume {
+    new x;
+    inner:: assume { new y; y == x; } prove x == y;
+  } prove x == x;
+  omitted;
+
+  theorem StepAssumptions = true;
+  proof {
+    step goal: assume { new x; } prove x == x;
+    obvious;
+    step sufficient: suffices assume { new y; y == y; } prove true;
+    omitted;
+    qed omitted;
+  }
+
+  theorem NoProof = true;
+
+  theorem RelationChain = 1 <= 4;
+  proof {
+    step first: 1 <= 2;
+    obvious;
+    step second: @ <= 3;
+    obvious;
+    step: @ <= 4;
+    obvious;
+    qed by ref(first), ref(second);
+  }
+
+  theorem UnnamedSteps = true;
+  proof {
+    step: assume { new y; y == y; } prove true;
+    omitted;
+    step: suffices true;
+    omitted;
+    step: pick z: z == 1;
+    obvious;
+    step: define { def LocalUnnamed = true; };
+    step: use LocalUnnamed;
+    step: hide NamedAssumption;
+    step named: true;
+    obvious;
+    qed by ref(named);
+  }
+
+  theorem ModuleFacts = true;
+  by module Naturals def module Naturals;
+  theorem true;
+  by only true;
+  theorem true;
+  obvious;
+  theorem true;
+  omitted;
+}

@@ -1,0 +1,14 @@
+module StrongFairness {
+  var turn, done;
+  def vars = tuple(turn, done);
+  def Init = turn == false && done == false;
+  def Toggle = next(turn) == !turn && unchanged done;
+  def Finish = turn && !done && next(done) == true && unchanged turn;
+  def Next = Toggle || Finish;
+  def Spec = Init && always stutter(Next, vars) && weakFair(vars, Toggle) && strongFair(vars, Finish);
+  def EventuallyDone = eventually done;
+  config {
+    specification Spec;
+    property EventuallyDone;
+  }
+}

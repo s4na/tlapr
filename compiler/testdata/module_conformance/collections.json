@@ -1,0 +1,8 @@
+{
+  "states": [
+    {"phase": "0", "pending": "{1, 2}", "item": "[count |-> 0, ready |-> FALSE]", "mapping": "(2 :> 0 @@ 4 :> 0)", "queue": "<<2, 3>>"},
+    {"phase": "1", "pending": "{2}", "item": "[count |-> 1, ready |-> TRUE]", "mapping": "(2 :> 0 @@ 4 :> 2)", "queue": "<<3, 2>>"}
+  ],
+  "initial": [0],
+  "transitions": [[0, 1]]
+}

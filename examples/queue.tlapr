@@ -1,0 +1,38 @@
+module Queue extends Integers, Sequences, FiniteSets {
+  const Items;
+  var pending, queue, done;
+  def Vars = tuple(pending, queue, done);
+  def Init = pending == Items && queue == tuple() && done == {};
+
+  def Enqueue(item) = all {
+    item in pending;
+    next(pending) == pending difference {item};
+    next(queue) == Append(queue, item);
+    unchanged done;
+  };
+  def Dequeue = all {
+    Len(queue) > 0;
+    next(queue) == Tail(queue);
+    next(done) == done union {Head(queue)};
+    unchanged pending;
+  };
+  def EnqueueSome = exists item in Items: Enqueue(item);
+  def Next = EnqueueSome || Dequeue;
+  def Safe = all {
+    pending subsetof Items;
+    done subsetof Items;
+    pending intersect done == {};
+    Cardinality(pending) + Len(queue) + Cardinality(done) == Cardinality(Items);
+  };
+  def Finished = eventually (done == Items);
+  def Spec = Init && always stutter(Next, Vars)
+    && weakFair(Vars, EnqueueSome) && weakFair(Vars, Dequeue);
+
+  config {
+    constant Items = {1, 2};
+    specification Spec;
+    invariant Safe;
+    property Finished;
+    checkDeadlock false;
+  }
+}

@@ -1,0 +1,16 @@
+module Junctions {
+  def CompactAnd = /\ true /\ false /\ true;
+  def FormattedAnd = /\ true
+    /\ false
+    /\ true;
+  def CompactOr = \/ false \/ true \/ false;
+  def FormattedOr = \/ false
+    \/ true
+    \/ false;
+  assume CompactAnd!2 == false && FormattedAnd!2 == false;
+  assume CompactOr!2 == true && FormattedOr!2 == true;
+  var x;
+  def Init = x == 0;
+  def Next = next(x) == x;
+  config { init Init; next Next; }
+}

@@ -1,0 +1,3 @@
+module RecordSetReservedField extends Naturals {
+  def Values = recordset {`IF`: Nat};
+}

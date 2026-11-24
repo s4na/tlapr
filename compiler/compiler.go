@@ -1,4 +1,4 @@
-// Package compiler translates a small, typed state-machine language into TLA+.
+// Package compiler translates tlapr state models and structured modules into TLA+.
 package compiler
 
 import "fmt"
@@ -38,9 +38,17 @@ func (d *Diagnostic) Error() string {
 	return fmt.Sprintf("%s:%d:%d: %s", d.Filename, d.Line, d.Column, d.Message)
 }
 
-// Compile validates source before emitting any TLA+. It is deterministic and
-// does not invoke TLC, access the filesystem, or execute the input as Go code.
+// Compile parses source before emitting TLA+. Model mode also checks Int/Bool
+// types; module mode uses SANY (tlapr validate) for TLA+ name and level checks.
+// Compilation is deterministic and does not access the filesystem or execute input.
 func Compile(filename string, source []byte, options Options) (*Output, error) {
+	fullTokens, fullErr := lexFull(filename, source)
+	if len(fullTokens) > 0 && fullTokens[0].kind == "name" && fullTokens[0].text == "module" {
+		if fullErr != nil {
+			return nil, fullErr
+		}
+		return compileFull(filename, fullTokens, options)
+	}
 	tokens, err := lex(filename, source)
 	if err != nil {
 		return nil, err
