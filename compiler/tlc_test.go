@@ -1,3 +1,5 @@
+//go:build tlapr_integration
+
 package compiler_test
 
 import (
@@ -15,20 +17,7 @@ import (
 
 // 実際のTLCで生成した仕様を検査し、変換による意味の変化を検出する。
 func TestTLC(t *testing.T) {
-	jar := os.Getenv("TLA2TOOLS_JAR")
-	if jar == "" {
-		t.Skip("TLA2TOOLS_JAR未指定のため、実TLC統合テストを省略")
-	}
-	jar, err := filepath.Abs(jar)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := os.Stat(jar); err != nil {
-		t.Fatalf("TLA2TOOLS_JAR: %v", err)
-	}
-	if _, err := exec.LookPath("java"); err != nil {
-		t.Fatal(err)
-	}
+	jar := requireTLC(t)
 	inventory, err := os.ReadFile("../examples/inventory.tlapr")
 	if err != nil {
 		t.Fatal(err)
@@ -135,6 +124,37 @@ func runTLC(t *testing.T, jar, source string, allowDeadlock bool) (string, int) 
 	if err != nil {
 		t.Fatal(err)
 	}
+	run := runGeneratedTLC(t, jar, result, false)
+	return run.log, run.exitCode
+}
+
+func requireTLC(t *testing.T) string {
+	t.Helper()
+	jar := os.Getenv("TLA2TOOLS_JAR")
+	if jar == "" {
+		t.Fatal("tlapr_integration には TLA2TOOLS_JAR が必要です。統合テストを省略せず失敗します")
+	}
+	jar, err := filepath.Abs(jar)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info, err := os.Stat(jar); err != nil || !info.Mode().IsRegular() {
+		t.Fatalf("TLA2TOOLS_JARが通常ファイルではありません: %s (%v)", jar, err)
+	}
+	if _, err := exec.LookPath("java"); err != nil {
+		t.Fatal(err)
+	}
+	return jar
+}
+
+type tlcRun struct {
+	log      string
+	exitCode int
+	graph    []byte
+}
+
+func runGeneratedTLC(t *testing.T, jar string, result *compiler.Output, dumpGraph bool) tlcRun {
+	t.Helper()
 	dir := t.TempDir()
 	for name, content := range map[string]string{
 		result.Module + ".tla": result.TLA,
@@ -146,19 +166,30 @@ func runTLC(t *testing.T, jar, source string, allowDeadlock bool) (string, int) 
 	}
 	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "java", "-XX:+UseParallelGC", "-jar", jar,
-		"-workers", "1", "-config", result.Module+".cfg", result.Module+".tla")
+	args := []string{"-XX:+UseParallelGC", "-jar", jar, "-workers", "1", "-config", result.Module + ".cfg"}
+	if dumpGraph {
+		args = append(args, "-dump", "dot,actionlabels", "states.dot")
+	}
+	cmd := exec.CommandContext(ctx, "java", append(args, result.Module+".tla")...)
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if ctx.Err() != nil {
 		t.Fatalf("TLCが制限時間内に完了しなかった: %v\n%s", ctx.Err(), output)
 	}
-	if err == nil {
-		return string(output), 0
+	run := tlcRun{log: string(output)}
+	if err != nil {
+		if exit, ok := errors.AsType[*exec.ExitError](err); ok {
+			run.exitCode = exit.ExitCode()
+			return run
+		}
+		t.Fatalf("TLCを実行できなかった: %v\n%s", err, output)
 	}
-	if exit, ok := errors.AsType[*exec.ExitError](err); ok {
-		return string(output), exit.ExitCode()
+	// 違反で終了したときのdumpは探索途中なので、完全なグラフとして扱わない。
+	if dumpGraph {
+		run.graph, err = os.ReadFile(filepath.Join(dir, "states.dot"))
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
-	t.Fatalf("TLCを実行できなかった: %v\n%s", err, output)
-	return "", -1
+	return run
 }

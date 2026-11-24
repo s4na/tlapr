@@ -1,0 +1,8 @@
+{
+  "states": [
+    {"Init": -2147483648, "Next": 7, "TypeOK": true, "step1": 0},
+    {"Init": 2147483647, "Next": -5, "TypeOK": false, "step1": 1}
+  ],
+  "initial": [0],
+  "transitions": [[0, 1]]
+}

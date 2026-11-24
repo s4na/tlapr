@@ -1,0 +1,16 @@
+{
+  "states": [
+    {
+      "result": 0, "leftAssoc": 0, "negative": 0,
+      "lt": false, "le": false, "gt": false,
+      "ge": false, "eq": false, "ne": false, "done": false
+    },
+    {
+      "result": 2, "leftAssoc": 4, "negative": -5,
+      "lt": false, "le": true, "gt": true,
+      "ge": false, "eq": false, "ne": true, "done": true
+    }
+  ],
+  "initial": [0],
+  "transitions": [[0, 1]]
+}

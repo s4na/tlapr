@@ -1,0 +1,30 @@
+// 二つの選択肢を両方探索し、合流後の状態は同一として扱う。
+model Branching {
+  state {
+    phase: Int = 0
+  }
+
+  action left {
+    require phase == 0
+    phase = 1
+  }
+
+  action right {
+    require phase == 0
+    phase = 2
+  }
+
+  action join {
+    require phase == 1 || phase == 2
+    phase = 3
+  }
+
+  action disabled {
+    require false
+    phase = 4
+  }
+
+  invariant reachable {
+    phase >= 0 && phase <= 3
+  }
+}

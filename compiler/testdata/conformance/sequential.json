@@ -1,0 +1,8 @@
+{
+  "states": [
+    {"x": 0, "y": 0, "done": false, "untouched": true},
+    {"x": 3, "y": 2, "done": true, "untouched": true}
+  ],
+  "initial": [0],
+  "transitions": [[0, 1]]
+}

@@ -1,0 +1,26 @@
+// action内で更新した値を後続の代入が読み、途中の状態は外へ出ない。
+model Sequential {
+  state {
+    x: Int = 0
+    y: Int = 0
+    done: Bool = false
+    untouched: Bool = true
+  }
+
+  action apply {
+    require !done
+    x += 1
+    x += 1
+    y = x
+    x += 1
+    done = true
+  }
+
+  invariant atomic {
+    (!done && x == 0 && y == 0) || (done && x == 3 && y == 2)
+  }
+
+  invariant preserved {
+    untouched
+  }
+}

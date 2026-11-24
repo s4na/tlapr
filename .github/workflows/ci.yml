@@ -9,7 +9,30 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  unit:
+    name: Go単体テスト
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Goの形式・静的解析・ビルド
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            printf '%s\n' "$unformatted"
+            exit 1
+          fi
+          go vet ./...
+          go build ./...
+      - name: 通常のGoテスト
+        run: go test -count=1 ./...
+
+  tlapr:
+    name: tlapr変換検証
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,15 +45,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Goの形式・静的解析・ビルド
-        run: |
-          unformatted=$(gofmt -l .)
-          if [ -n "$unformatted" ]; then
-            printf '%s\n' "$unformatted"
-            exit 1
-          fi
-          go vet ./...
-          go build ./...
       - name: TLCの取得とチェックサム検証
         run: |
           curl --fail --location --retry 3 \
@@ -40,5 +54,5 @@ jobs:
             936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88 \
             "$RUNNER_TEMP/tla2tools.jar" | sha256sum --check
           echo "TLA2TOOLS_JAR=$RUNNER_TEMP/tla2tools.jar" >> "$GITHUB_ENV"
-      - name: 単体テストとTLC統合テスト
-        run: go test -count=1 ./...
+      - name: tlaprモデル・独立した期待値・変換ミスの検出
+        run: go test -tags=tlapr_integration -run '^(TestTLC|TestTLAPR)' -count=1 -v ./compiler

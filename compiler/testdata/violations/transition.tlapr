@@ -1,0 +1,17 @@
+// 1回の遷移後に不変条件へ違反する。検査結果はTLCの終了コード12。
+model TransitionViolation {
+  state {
+    count: Int = 0
+    done: Bool = false
+  }
+
+  action violate {
+    require !done
+    count = 1
+    done = true
+  }
+
+  invariant expected_false {
+    count == 0
+  }
+}
