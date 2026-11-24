@@ -483,7 +483,7 @@ func (p *fullParser) fullConfigValue() string {
 	case t.text == "-":
 		p.fail(t, "negative TLC config values require a definition override (constant N <- Value)")
 		return ""
-	case t.text == "true", t.text == "false":
+	case t.kind == "name" && (t.text == "true" || t.text == "false"):
 		return strings.ToUpper(t.text)
 	case t.kind == "string":
 		return t.text

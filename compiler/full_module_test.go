@@ -79,6 +79,31 @@ func TestFullModuleConfiguration(t *testing.T) {
 	}
 }
 
+func TestFullModuleConfigBooleanValues(t *testing.T) {
+	for _, tc := range []struct{ name, value, want string }{
+		{"quoted true", "`true`", "true"},
+		{"quoted false", "`false`", "false"},
+		{"boolean true", "true", "TRUE"},
+		{"boolean false", "false", "FALSE"},
+		{"string true", `"true"`, `"true"`},
+		{"string false", `"false"`, `"false"`},
+		{"mixed set", "{`true`, true, `false`, false}", "{true, TRUE, false, FALSE}"},
+		{"nested set", "{{`true`, false}, {`false`, true}}", "{{true, FALSE}, {false, TRUE}}"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			source := []byte("module ConfigValues { const Value; config { constant Value = " + tc.value + "; } }")
+			out, err := compiler.Compile("config_values.tlapr", source, compiler.Options{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "CONSTANT Value = " + tc.want + "\nCHECK_DEADLOCK TRUE\n"
+			if out.Config != want {
+				t.Fatalf("config:\n%s\nwant:\n%s", out.Config, want)
+			}
+		})
+	}
+}
+
 func TestFullModuleDiagnostics(t *testing.T) {
 	for _, tc := range []struct{ name, source, want string }{
 		{"missing separator", "module M { var x def Init = true; }", "expected \";\""},

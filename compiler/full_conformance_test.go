@@ -20,7 +20,7 @@ import (
 // are normalized; values are not evaluated by the compiler or regenerated here.
 func TestTLAPRFullConformance(t *testing.T) {
 	jar := requireTLC(t)
-	for _, name := range []string{"collections", "nondeterminism"} {
+	for _, name := range []string{"collections", "nondeterminism", "config_values"} {
 		t.Run(name, func(t *testing.T) {
 			path := "testdata/module_conformance/" + name
 			out := compileFixture(t, path+".tlapr")

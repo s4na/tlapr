@@ -1,0 +1,24 @@
+module ConfigValues extends FiniteSets {
+  const QuotedTrue, QuotedFalse, BooleanTrue, BooleanFalse, MixedValues;
+  var quotedTrue, quotedFalse, booleanTrue, booleanFalse, size;
+
+  def Init = all {
+    quotedTrue == QuotedTrue;
+    quotedFalse == QuotedFalse;
+    booleanTrue == BooleanTrue;
+    booleanFalse == BooleanFalse;
+    size == Cardinality(MixedValues);
+  };
+  def Next = false && unchanged(tuple(quotedTrue, quotedFalse, booleanTrue, booleanFalse, size));
+
+  config {
+    constant QuotedTrue = `true`;
+    constant QuotedFalse = `false`;
+    constant BooleanTrue = true;
+    constant BooleanFalse = false;
+    constant MixedValues = {`true`, true, `false`, false};
+    init Init;
+    next Next;
+    checkDeadlock false;
+  }
+}
