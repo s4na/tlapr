@@ -1,0 +1,10 @@
+{
+  "states": [
+    {"phase": 0},
+    {"phase": 1},
+    {"phase": 2},
+    {"phase": 3}
+  ],
+  "initial": [0],
+  "transitions": [[0, 1], [0, 2], [1, 3], [2, 3]]
+}

@@ -1,0 +1,26 @@
+// TLA+のモジュール・生成名・LET変数に似た名前と、整数の両端を扱う。
+model Integers {
+  state {
+    Init: Int = -2147483648
+    Next: Int = 1 + 2 * 3
+    TypeOK: Bool = !(false || false)
+    step1: Int = 0
+  }
+
+  action Spec {
+    require step1 == 0
+    Init = 2147483647
+    Next = -(Next - 2)
+    TypeOK = !TypeOK
+    step1 = 1
+  }
+
+  invariant Spec {
+    (step1 == 0 && Init == -2147483648 && Next == 7 && TypeOK) ||
+      (step1 == 1 && Init == 2147483647 && Next == -5 && !TypeOK)
+  }
+
+  invariant {
+    step1 >= 0 && step1 <= 1
+  }
+}

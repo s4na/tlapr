@@ -1,0 +1,10 @@
+{
+  "states": [
+    {"a": false, "b": false, "both": false, "either": false, "different": false, "notA": true},
+    {"a": true, "b": false, "both": false, "either": true, "different": true, "notA": false},
+    {"a": false, "b": true, "both": false, "either": true, "different": true, "notA": true},
+    {"a": true, "b": true, "both": true, "either": true, "different": false, "notA": false}
+  ],
+  "initial": [0],
+  "transitions": [[0, 1], [0, 2], [1, 0], [1, 3], [2, 3], [2, 0], [3, 2], [3, 1]]
+}

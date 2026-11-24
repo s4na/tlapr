@@ -1,0 +1,20 @@
+// 同じ三つの状態でも、resetの条件が変われば遷移の集合が変わる。
+model Cycle {
+  state {
+    n: Int = 0
+  }
+
+  action increment {
+    require n < 2
+    n += 1
+  }
+
+  action reset {
+    require n == 2
+    n = 0
+  }
+
+  invariant range {
+    0 <= n && n <= 2
+  }
+}

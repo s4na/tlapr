@@ -1,0 +1,39 @@
+// 手計算した数値と比較結果を状態として残し、Go側の期待値と照合する。
+model Arithmetic {
+  state {
+    result: Int = 0
+    leftAssoc: Int = 0
+    negative: Int = 0
+    lt: Bool = false
+    le: Bool = false
+    gt: Bool = false
+    ge: Bool = false
+    eq: Bool = false
+    ne: Bool = false
+    done: Bool = false
+  }
+
+  action calculate {
+    require !done
+    result = -3 + 4 * 2 - (5 - 2)
+    result *= 3
+    result -= 4
+    leftAssoc = 9 - 3 - 2
+    negative = -(3 + 2)
+    lt = result < 2
+    le = result <= 2
+    gt = leftAssoc > result
+    ge = negative >= 0
+    eq = result == leftAssoc
+    ne = result != negative
+    done = true
+  }
+
+  invariant values {
+    !done || (result == 2 && leftAssoc == 4 && negative == -5)
+  }
+
+  invariant comparisons {
+    !done || (!lt && le && gt && !ge && !eq && ne)
+  }
+}

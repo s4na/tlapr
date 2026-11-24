@@ -1,0 +1,32 @@
+// aとbの全4通りに到達し、更新後の値から真理値表を計算する。
+model Booleans {
+  state {
+    a: Bool = false
+    b: Bool = false
+    both: Bool = false
+    either: Bool = false
+    different: Bool = false
+    notA: Bool = true
+  }
+
+  action toggleA {
+    a = !a
+    both = a && b
+    either = a || b
+    different = a != b
+    notA = !a
+  }
+
+  action toggleB {
+    b = !b
+    both = a && b
+    either = a || b
+    different = a != b
+    notA = !a
+  }
+
+  invariant truthTable {
+    both == (a && b) && either == (a || b) &&
+      different == (a != b) && notA == !a
+  }
+}

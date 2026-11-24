@@ -142,13 +142,43 @@ go vet ./...
 go build ./...
 ```
 
-`TLA2TOOLS_JAR` が指定されている場合は、`go test ./...` で実際のTLCを使う統合テストも実行します。指定がない場合、その統合テストはスキップします。
+通常のGoテストはJavaやTLCなしで実行できます。演算子・結合順序、型と診断、actionごとの代入環境、ソース対応表、CLIの失敗処理などを検査します。
+
+実際のTLCを使う検証は、`tlapr_integration` タグを付けて実行します。このタグを指定したのに `TLA2TOOLS_JAR` やJavaがない場合は失敗します。CIで検証が省略されたまま成功することを防ぎます。
 
 ```sh
-TLA2TOOLS_JAR="$PWD/.tools/tla2tools.jar" go test -count=1 ./...
+TLA2TOOLS_JAR="$PWD/.tools/tla2tools.jar" \
+  go test -tags=tlapr_integration -run '^(TestTLC|TestTLAPR)' -count=1 -v ./compiler
 ```
 
-統合テストは、在庫モデルの完走、不変条件違反、デッドロック、未更新変数の維持、逐次代入と原子性、複数actionの探索を確認します。CIではGoの書式・静的解析・ビルドに加え、固定バージョンのTLCをチェックサム検証して、この統合テストを実行します。
+GitHub Actionsでは **「Go単体テスト」** と **「tlapr変換検証」** を別々のジョブで実行します。後者は固定バージョンのTLCをチェックサム検証して使用します。
+
+### tlapr自身を使った変換の検査
+
+[`compiler/testdata/conformance`](compiler/testdata/conformance) に、検証用の `.tlapr` モデルと手書きの期待値 `.json` を置いています。
+
+1. `.tlapr` をこのコンパイラでTLA+へ変換する。
+2. TLCで不変条件を検査し、到達する状態と遷移をすべて出力する。
+3. 状態の値・初期状態・遷移の集合を、コンパイラから独立して書いたJSONの期待値と比較する。
+
+不変条件だけでなく実際の値と遷移も比べるため、「更新と不変条件を同じように誤変換した」「actionが出力されず検査すべき状態へ到達しなかった」といった問題を検出できます。TLCが付ける状態IDや探索順には依存しません。
+
+| モデル | 検査する性質 |
+| --- | --- |
+| `sequential.tlapr` | 記述順の代入、複数回の更新、原子性、未更新変数の維持 |
+| `branching.tlapr` | 複数actionの分岐と合流、無効なguard |
+| `cycle.tlapr` | 3状態の循環と、許される遷移の境界 |
+| `arithmetic.tlapr` | 算術・比較演算と優先順位を手計算した結果との一致 |
+| `booleans.tlapr` | Boolの全4組合せと論理演算の真理値表 |
+| `namespaces.tlapr` | 名前の衝突回避、匿名不変条件、初期値、整数の上下限 |
+
+JSONの `states` は状態変数の値、`initial` は初期状態の配列index、`transitions` は遷移元・遷移先のindex対です。TLCが探索する `Next` の遷移を期待値に記述し、`Spec` が許す暗黙のstutteringは追加しません。期待値は生成結果から自動更新しないでください。
+
+[`compiler/testdata/violations`](compiler/testdata/violations) では、初期状態または遷移後に不変条件が破れるモデルを使い、TLCの終了コードと違反した不変条件名まで確認します。既存の在庫モデル・デッドロック検査も継続しています。
+
+さらに、生成結果をテスト内で意図的に変更し、増分の間違い・actionの欠落・余計な遷移・不変条件の欠落を検出できることを確認します。余計な遷移のケースでは状態集合と不変条件の成否は変わらず、辺の比較だけが違いを捉えます。本体のコードを書き換えて実行するテストではありません。
+
+これは有限なモデルによる回帰検証です。コンパイラ全体の意味保存を数学的に証明するものではありません。グラフの読取りは固定したTLC v1.7.4のInt/Bool向けDOT形式に限定し、未対応の形式を読み飛ばさずエラーにします。
 
 ## 参照
 

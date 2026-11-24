@@ -1,0 +1,15 @@
+// 初期状態がすでに不変条件に違反する。検査結果はTLCの終了コード12。
+model InitialViolation {
+  state {
+    count: Int = 0
+  }
+
+  action unreachable {
+    require false
+    count = 1
+  }
+
+  invariant expected_false {
+    count > 0
+  }
+}
