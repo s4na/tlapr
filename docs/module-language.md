@@ -50,6 +50,8 @@ module Example extends Integers, Sequences {
 
 DSLの予約語を名前にする場合もバッククォートを使います。例えば `` def `next` = true; `` と `` def Value = `next`; `` です。TLA+自身の予約語は変数や演算子の識別子にできません。ただし、公式文法で `Name` とされるモジュール名やレコードのフィールド名には使えます。例えば `` module `IF` {} ``、`` record {`IF`: 1} `` です。一部のフィールド名については後述のSANYの制限があります。
 
+ちょうど `WF_` / `SF_` という名前も、引用の有無によらずモジュール名やレコードのフィールド名に使えます。例えば `module WF_ {}`、`record {WF_: 1}.WF_` です。変数名や演算子名には使えず、`WF_Value` のように続きがある名前も使えません。`WF_x(A)` / `SF_x(A)` は引き続き公平性の式です。
+
 ## 値と式
 
 `true` / `false`、整数・小数・2進数 `\b101`・8進数 `\o17`・16進数 `\hFF`、文字列を記述できます。`module` の数値リテラルを32bitへ制限することはありません。`.25` はSANYとの互換性のため `0.25` に正規化します。TLCで評価できる数値には別途制限があります。
@@ -186,6 +188,8 @@ config {
 
 `specification` の代わりに `init Init; next Next;` を指定できます。両方の方式を混在させることはできません。`constant N <- DefinedValue;` と、`constant N <- [Module] DefinedValue;` の置換も使えます。設定値は非負の整数・文字列・真偽値・モデル値・それらの集合です。負数や計算式には、例えば `def Negative = -1;` と `constant N <- Negative;` のように演算子を定義して置換してください。
 
+`constant I!Value <- DefinedValue;` は、指定したinstanceの定義だけを置換します。`constant I!Child!Value = 2;` のように複数段のinstance名と値の直接指定も使えます。同じモジュールから作った別のinstanceには適用されず、`[Module]` によるモジュール単位の置換とは適用範囲が異なります。
+
 `constraint`、`actionConstraint`、`symmetry`、`view` も指定できます。設定の意味は検証に使うTLA+ Tools v1.7.4付属のTLCの仕様に従います。`checkDeadlock` の既定値は `true`、CLIの `-allow-deadlock` は指定された設定を `false` に上書きします。`config` がないモジュールもコンパイル・SANY検査できますが、`check` は設定不足として失敗します。
 
 ## 対応範囲と検証
@@ -223,5 +227,7 @@ TLCが探索した値は、コンパイラの出力から生成しない手書�
 公開されたTLA+2文法はモジュール直下の `USE ONLY` を許していますが、TLA+ Tools v1.7.4付属のSANYはこの形式を拒否します。tlaprは指定された意味を保って生成し、`validate` は非0で失敗します。[再現用ソース](../compiler/testdata/tool_limits/module_use_only.tlapr)を置いています。モジュール直下の `USE`、証明stepの `USE ONLY`、`BY ONLY` は実SANYを通しています。
 
 レコード集合のフィールドは公式文法では `Name` ですが、固定したSANYは `[IF : Nat]` を拒否します。一方、レコード値の `[IF |-> 1]`、`.IF` の参照と更新は受理します。この差も[再現用ソース](../compiler/testdata/tool_limits/recordset_reserved_field.tlapr)とCLIの失敗検知テストに残しています。
+
+同じSANYは、レコード値の2番目以降のフィールドに予約語を使った `[value |-> 1, WF_ |-> 2]` も拒否します。先頭のフィールドに使った `[WF_ |-> 1]` は受理します。こちらも[再現用ソース](../compiler/testdata/tool_limits/record_later_reserved_field.tlapr)で、変換後の `validate` が失敗を返すことを検査しています。
 
 これらは構文の変換と有限モデルの回帰検証です。コンパイラ全体の意味保存を数学的に証明したものではありません。PlusCalは別の言語であり、アルゴリズムコメントの翻訳はこの構文の対象に含みません。

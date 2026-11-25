@@ -396,7 +396,10 @@ func (p *fullParser) fullNamedPrimary(t token) fullExpression {
 		}
 		if len(names) > 0 && p.look(i).text == ")" && p.look(i+1).text == "::" {
 			for range i + 2 {
-				p.take()
+				parameter := p.take()
+				if (parameter.kind == "name" || parameter.kind == "quotedname") && (!validFullName(parameter.text) || isTLAReserved(parameter.text)) {
+					p.fail(parameter, "invalid TLA+ identifier %q", parameter.text)
+				}
 			}
 			return fullExpression{text: "(" + t.text + "(" + strings.Join(names, ", ") + ") :: " + p.fullExpr() + ")"}
 		}
@@ -463,7 +466,12 @@ func (p *fullParser) fullSelector() string {
 			p.fail(t, "a numeric subexpression selector must be a decimal integer")
 		}
 		return t.text
-	case t.kind == "name" || t.kind == "quotedname" || t.kind == "nativeop" ||
+	case t.kind == "name" || t.kind == "quotedname":
+		if !validFullName(t.text) || isTLAReserved(t.text) && !fullPrefixOperator(t.text) {
+			p.fail(t, "invalid TLA+ identifier %q", t.text)
+		}
+		return t.text
+	case t.kind == "nativeop" ||
 		t.text == "<<" || t.text == ">>" || t.text == ":" || t.text == "@":
 		return t.text
 	case t.text == "(":

@@ -418,6 +418,9 @@ func (p *fullParser) fullConfig() {
 		switch key.text {
 		case "constant":
 			name := p.name().text
+			for p.err == nil && p.accept("!") {
+				name += "!" + p.name().text
+			}
 			op := p.take()
 			if op.text != "=" && op.text != "<-" {
 				p.fail(op, "expected = or <- in a constant setting")
