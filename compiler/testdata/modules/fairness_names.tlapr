@@ -1,0 +1,16 @@
+module `WF_` extends Integers {
+  module SF_ {
+    def WeakFields = record {`WF_`: 1};
+    def StrongFields = record {SF_: 2};
+  }
+  def Imported = instance `SF_`;
+  def Value = tuple(Imported!WeakFields.WF_, Imported!StrongFields.SF_);
+  def Changed = update(Imported!WeakFields) { .WF_ = @ + 1; };
+  def StrongChanged = update(Imported!StrongFields) { .`SF_` = 3; };
+  def NativeFields = [WF_ |-> 1];
+
+  var x;
+  def Advance = next(x) == x + 1;
+  def Weak = WF_x(Advance);
+  def Strong = SF_(x)(Advance);
+}

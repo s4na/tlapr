@@ -104,6 +104,46 @@ func TestFullModuleConfigBooleanValues(t *testing.T) {
 	}
 }
 
+func TestFullModuleQualifiedConstantSettings(t *testing.T) {
+	for _, tc := range []struct{ name, setting, want string }{
+		{"single name", "Value <- Replacement", "Value <- Replacement"},
+		{"instance override", "I!Value <- Replacement", "I!Value <- Replacement"},
+		{"nested instance override", "I!Child!Value <- Replacement", "I!Child!Value <- Replacement"},
+		{"instance value", "I!Value = 1", "I!Value = 1"},
+		{"nested instance value", "I!Child!Value = 2", "I!Child!Value = 2"},
+		{"quoted segment", "I!`next` <- `next`", "I!next <- next"},
+		{"module override", "Value <- [Inner] Replacement", "Value <- [Inner] Replacement"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			source := []byte("module QualifiedConfig { config { constant " + tc.setting + "; } }")
+			out, err := compiler.Compile("qualified_config.tlapr", source, compiler.Options{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "CONSTANT " + tc.want + "\nCHECK_DEADLOCK TRUE\n"
+			if out.Config != want {
+				t.Fatalf("config:\n%s\nwant:\n%s", out.Config, want)
+			}
+		})
+	}
+}
+
+func TestFullModuleFairnessNames(t *testing.T) {
+	for _, name := range []string{"WF_", "SF_"} {
+		for _, spelling := range []string{name, "`" + name + "`"} {
+			t.Run(spelling, func(t *testing.T) {
+				out, err := compiler.Compile("name.tlapr", []byte("module "+spelling+" {}"), compiler.Options{})
+				if err != nil {
+					t.Fatal(err)
+				}
+				if out.Module != name || out.TLA != "---- MODULE "+name+" ----\n====\n" {
+					t.Fatalf("module name was not preserved: %q\n%s", out.Module, out.TLA)
+				}
+			})
+		}
+	}
+}
+
 func TestFullModuleDiagnostics(t *testing.T) {
 	for _, tc := range []struct{ name, source, want string }{
 		{"missing separator", "module M { var x def Init = true; }", "expected \";\""},
@@ -126,6 +166,13 @@ func TestFullModuleDiagnostics(t *testing.T) {
 		{"duplicate specification", "module M { config { specification A; specification B; } }", "duplicate config"},
 		{"computed constant config", "module M { config { constant N = 1 + 1; } }", "expected \";\""},
 		{"negative constant config", "module M { config { constant N = -1; } }", "require a definition override"},
+		{"missing qualified segment", "module M { config { constant I! <- Value; } }", "expected an identifier"},
+		{"empty qualified segment", "module M { config { constant I! !Value = 1; } }", "expected an identifier"},
+		{"numeric qualified segment", "module M { config { constant I!1 = 1; } }", "expected an identifier"},
+		{"qualified call", "module M { config { constant I(1)!Value = 1; } }", "expected = or <-"},
+		{"fairness keyword identifier", "module M { var WF_; }", "expected an identifier"},
+		{"quoted fairness keyword identifier", "module M { def `SF_` = true; }", "expected an identifier"},
+		{"extended fairness name", "module `WF_Value` {}", "unknown TLA+ operator"},
 		{"nested config", "module M { module N { config {} } }", "root module"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

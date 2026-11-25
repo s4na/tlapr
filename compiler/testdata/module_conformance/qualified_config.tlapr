@@ -1,0 +1,29 @@
+module QualifiedConfig {
+  module Inner {
+    module Leaf {
+      def Value = 0;
+    }
+    def Value = 0;
+    def Child = instance Leaf;
+  }
+  def I = instance Inner;
+  def J = instance Inner;
+  def Replacement = 1;
+  var selected, sibling, nestedSelected, nestedSibling;
+
+  def Init = all {
+    selected == I!Value;
+    sibling == J!Value;
+    nestedSelected == I!Child!Value;
+    nestedSibling == J!Child!Value;
+  };
+  def Next = false && unchanged(tuple(selected, sibling, nestedSelected, nestedSibling));
+
+  config {
+    constant I!Value <- Replacement;
+    constant I!Child!Value = 2;
+    init Init;
+    next Next;
+    checkDeadlock false;
+  }
+}

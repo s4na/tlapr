@@ -1,0 +1,12 @@
+{
+  "states": [
+    {
+      "selected": "1",
+      "sibling": "0",
+      "nestedSelected": "2",
+      "nestedSibling": "0"
+    }
+  ],
+  "initial": [0],
+  "transitions": []
+}

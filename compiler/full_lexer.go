@@ -86,7 +86,7 @@ func lexFull(filename string, source []byte) ([]token, error) {
 			advance()
 			advance()
 			advance()
-			result = append(result, token{value, value, pos})
+			result = append(result, token{"name", value, pos})
 			continue
 		}
 		start := i
@@ -213,7 +213,9 @@ func validFullName(s string) bool {
 		}
 		letter = letter || ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z'
 	}
-	return letter && !strings.HasPrefix(s, "WF_") && !strings.HasPrefix(s, "SF_")
+	// WF_ and SF_ are valid Names, but longer names with those prefixes are not.
+	// Identifier positions separately reject these reserved fairness keywords.
+	return letter && !(len(s) > 3 && (strings.HasPrefix(s, "WF_") || strings.HasPrefix(s, "SF_")))
 }
 
 // TLA+2's complete ASCII operator vocabulary, plus DSL delimiters/aliases.
